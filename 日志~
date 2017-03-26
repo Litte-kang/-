@@ -1,0 +1,71 @@
+1、此阶段完成串口通讯模块
+2、此阶段完成多线串口接收，以及网络通讯，建立远程数据站处理数据。同时确立远程通讯接口
+采用json格式
+{
+	middleNo:X,			中间编号(10位字符串)
+	termialNo:[X，X],	末端设备编号（5位字符串，且可同时对多个终端设备设置相同数据）
+	dataType:X,			数据类型（3位字符串）
+	data:[X，X]			数据（整型）
+}
+例
+{
+	middleNo:'LY00000001',
+	TermialNo:['z0001'，'z0002'],
+	dataType:'z01',
+	data:[12，45,32,0,1]
+}
+3、此阶段开始些一部命令处理，但尚未成型
+4、远程接口修改
+{
+	middleNo:X,			中间件编号(10位字符串)
+	portNo:[X,X,X,X],	中间件串口编号(4个整型，且可以多个串口发送同样数据)
+	termialNo:[X,X],	末端设备编号（5位字符串，且可同时对多个终端设备设置相同数据）
+	dataType:X,			数据类型（3位字符串）
+	data:[X,X]			数据（整型）		
+}
+注：portNo,termialNo根据数据类型不同其数据或为空。
+5、本地接口（R，G，P）
+get:获取终端设备数据
+head(2byte):0xff,0xfd	
+type(1byte):x
+addr(2byte):x(低位),x(高位)
+data(4byte):x,x,x,x	
+crc(2byte):x(低位),x(高位)
+例,发送一个数据到地址位0x1234
+0xff,0xfd,0x01,0x34,0x12,0x00,0x00,0x00,0x00,0xab,0xef
+
+post:发送数据
+head(2byte):0xff,0xfe
+type(1byte):x
+addr(2byte):x(低位),x(高位)
+len(2byte):x(低位),x(高位)
+data(?byte):x,x,x,x....
+crc(2byte):x(低位),x(高位)
+
+response:应答
+head(2byte):0xff,0xff
+type(1byte):x
+addr(2byte):x(低位),x(高位)
+status(1byte):x
+crc(2byte):x(低位),x(高位)
+
+6、远程接口修（2017-03-22 15时35分18秒）
+{
+	middleNo:X,			中间件编号(10位字符串)
+	portNo:X,			中间件串口编号(1个字节，字节中第一位为1表示端口1，第二位表示端口2，第三位表示端口3，第四位表示端口4)
+	termialNo:[X,X],	末端设备编号（整型，且可同时对多个终端设备设置相同数据）
+	dataType:X,			数据类型（整型）
+	data:[X,X]			数据（整型）		
+}
+
+7、此备份版本完成了本地数据上传功能
+
+
+
+
+
+
+
+
+
+
