@@ -10,7 +10,8 @@ OBJS = 	MiddleServerMain.o \
 		RemoteDataServer.o \
 		AsyncCmd.o \
 		UartDataServer.o \
-		RGPProtocol.o
+		RGPProtocol.o \
+		DataQueue.o
 
 TARGET_CC = mipsel-openwrt-linux-gcc
 HOST_CC = gcc

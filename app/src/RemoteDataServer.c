@@ -9,29 +9,7 @@
 #include "Common.h"
 #include "UartApi.h"
 #include "Config.h"
-#include "sqlite3.h"
-
-/*
-Description			: mutex
-Default value		: PTHREAD_MUTEX_INITIALIZER.
-The scope of value	: /.
-First used			: /
-*/
-pthread_mutex_t g_CounterMutex = PTHREAD_MUTEX_INITIALIZER;
-/*
-Description			: record socket use status(uart thread will use it)
-Default value		: SCOKET_NULL_STATUS.
-The scope of value	: /.
-First used			: /
-*/
-uchar g_SocketUseStatus = SCOKET_NULL_STATUS;
-/*
-Description			: scoket paramter
-Default value		: {INVALID_SOCKET, 0, 0}.
-The scope of value	: /.
-First used			: /
-*/
-SocketParam g_SocketParam = {INVALID_SOCKET, 0, 0};
+#include "DataQueue.h"
 
 static void		RdsThrd(void *pArg);
 
@@ -84,8 +62,6 @@ int	Rds_Start()
 	}
 
 	pthread_attr_destroy(&thread_attr);
-
-	Socket_GetNetConifgInfo(&g_SocketParam);
 
 	return 0;
 }
@@ -264,44 +240,58 @@ int Rds_JsonString(RdsPack pack, uchar *pJsonStr)
 ***********************************************************************/
 static void	RdsThrd(void *pArg)
 {
-	RdsPack rpack = {0};
-	uchar rbuff[1024] = {0};
+	RdsPack pack = {0};
+	uchar buff[RDS_BUFF_SIZE] = {0};
 	int i = 0;
+	SocketParam socket_param = {INVALID_SOCKET, 0, 0};
 
-	l_debug(RUN_LOG_PATH, "-------start remote data station thread-------\n");
+	l_debug(RUN_LOG_PATH, "-------start remote data server thread-------\n");
+
+	if (0 != Socket_GetNetConifgInfo(&socket_param))
+	{
+		l_debug(ERR_LOG_PATH, "%s:get net param failed", __FUNCTION__);
+		return;
+	}
 
 	while (1)
 	{
 		//connect server
-		if (INVALID_SOCKET == g_SocketParam.m_Fd)
-		{
-			if (EBUSY != pthread_mutex_trylock(&g_CounterMutex))
-			{
-				g_SocketParam.m_Fd = Socket_ConnectServer(3, g_SocketParam);
+		socket_param.m_Fd = Socket_ConnectServer(3, socket_param);
 
-				pthread_mutex_unlock(&g_CounterMutex);
+		if (INVALID_SOCKET != socket_param.m_Fd)
+		{
+			memset(buff, 0, RDS_BUFF_SIZE);
+
+			if (0 == Socket_RecvData(socket_param.m_Fd, buff, RDS_BUFF_SIZE, 1000))
+			{
+				l_debug(NULL, "%s\n", buff);
+
+				memset(&pack, 0, sizeof(RdsPack));
+
+				Rds_JsonParse(&pack, buff);
+
+				DQ_InsertData((Data)pack, RDS_TYPE);
+			}
+
+			//send data
+			memset(&pack, 0, sizeof(RdsPack));
+			memset(buff, 0, RDS_BUFF_SIZE);
+			pack = DQ_GetData(UDS_TYPE).m_RdsData;
+
+			if (RDS_PORT_NO_EMPTY != pack.m_PortNo)
+			{
+				Rds_JsonString(pack, buff);
+
+				Socket_SendData(socket_param.m_Fd, buff, strlen(buff));
 			}
 		}
 
-		if (INVALID_SOCKET != g_SocketParam.m_Fd)
+		if (INVALID_SOCKET != socket_param.m_Fd)
 		{
-			if (0 == Socket_RecvData(g_SocketParam.m_Fd, rbuff, 1024, 1))
-			{
-				l_debug(NULL, "%s\n", rbuff);
-
-				memset(&rpack, 0, sizeof(RdsPack));
-
-				Rds_JsonParse(&rpack, rbuff);
-			}
+			Socket_Close(socket_param);
+			socket_param.m_Fd = INVALID_SOCKET;
 		}
 
-		if (SCOKET_NULL_STATUS == g_SocketUseStatus
-			&& INVALID_SOCKET != g_SocketParam.m_Fd)
-		{
-			Socket_Close(g_SocketParam);
-			g_SocketParam.m_Fd = INVALID_SOCKET;
-		}
-
-		DelayMS(50);
+		DelayMS(10);
 	}
 }

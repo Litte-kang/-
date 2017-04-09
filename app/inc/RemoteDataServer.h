@@ -15,10 +15,10 @@
 #define RDS_DATA_TYPE_X		0
 
 //for RdsPack Data Buffer
+#define RDS_DATA_SIZE_128		128
 #define RDS_DATA_SIZE_256		256
 #define RDS_DATA_SIZE_512		512
-#define RDS_DATA_SIZE_1024		1024
-#define RDS_DATA_SIZE 			RDS_DATA_SIZE_256
+#define RDS_DATA_SIZE 			RDS_DATA_SIZE_128
 
 //for RdsPack PortNO
 #define RDS_PORT_NO 		0x01
@@ -36,6 +36,8 @@
 #define SOCKET_USE_STATUS4		(SOCKET_INIT_STATUS << 3)
 #define SCOKET_NULL_STATUS		0x00
 
+#define RDS_BUFF_SIZE	1024
+
 typedef struct _RdsPack
 {
 	uchar 	m_MiddleNo[11];						//middle no use 10byte,the last byte is 0
@@ -46,28 +48,6 @@ typedef struct _RdsPack
 	ushort 	m_DataLen;
 	uchar 	m_Data[RDS_DATA_SIZE];
 }RdsPack;
-
-/*
-Description			: mutex
-Default value		: PTHREAD_MUTEX_INITIALIZER.
-The scope of value	: /.
-First used			: /
-*/
-extern pthread_mutex_t g_CounterMutex;
-/*
-Description			: record socket use status(uart thread will use it)
-Default value		: SCOKET_NULL_STATUS.
-The scope of value	: /.
-First used			: /
-*/
-extern uchar g_SocketUseStatus;
-/*
-Description			: scoket paramter
-Default value		: {INVALID_SOCKET, 0, 0}.
-The scope of value	: /.
-First used			: /
-*/
-extern SocketParam g_SocketParam;
 
 /***********************************************************************
 **Function Name	: Rds_Start

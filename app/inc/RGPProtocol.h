@@ -3,10 +3,12 @@
 
 #include "Type.h"
 
-#define RGP_GET		0xfdff	//get method: get data from other dev
+#define RGP_GET			0xfdff	//get method: get data from other dev
 #define RGP_POST 		0xfeff	//post method: send data to other dev
 #define RGP_RESPONSE 	0xffff	//response method: response get or post method
 #define RGP_NULL		0x0000	//null method
+
+#define RGP_BUFF_SIZE	256
 
 typedef struct _RGPPInfo
 {
@@ -18,7 +20,7 @@ typedef struct _RGPPInfo
 		struct
 		{
 			int		m_Len;
-			uchar 	*m_PData;			
+			uchar 	m_Data[RGP_BUFF_SIZE];			
 		}m_DataInfo;
 		uchar m_Status;
 	}m_Content;

@@ -263,7 +263,7 @@ int Uart_SendData(int portNo, const uchar *pData, int len)
 ***********************************************************************/
 static void	RecieveUartDataThrd(void *pArg)
 {
-	uchar rx_buff[BUFFER_SIZE] = {0};
+	uchar rx_buff[UART_RX_BUFFER_SIZE] = {0};
 	int real_read = 0;
 	int fd = 0;
 	int max_fd = 0;
@@ -299,9 +299,9 @@ static void	RecieveUartDataThrd(void *pArg)
 				if (FD_ISSET(fd, &tmp_set))
 				{
 					//clear rx_buff;
-					memset(rx_buff, 0, BUFFER_SIZE);
+					memset(rx_buff, 0, UART_RX_BUFFER_SIZE);
 
-					real_read = read(fd, rx_buff, 1024);
+					real_read = read(fd, rx_buff, UART_RX_BUFFER_SIZE);
 
 					if (0 < real_read)
 					{
@@ -317,7 +317,7 @@ static void	RecieveUartDataThrd(void *pArg)
 						}
 #endif		
 						//do here
-						//Uds_DataDispose(port_no, rx_buff, real_read);
+						Uds_DataDispose(port_no, rx_buff, real_read);
 					}
 				}
 			
@@ -471,7 +471,7 @@ static int SetUart(int fd, int baud_rate, int data_bits, uchar parity, int stop_
 	/*ÉèÖÃµÈ´ýÊ±¼äºÍ×îÐ¡½ÓÊÕ×Ö·û*/
 	
 	new_cfg.c_cc[VTIME]  = 1;
-	new_cfg.c_cc[VMIN] = (BUFFER_SIZE - 1);
+	new_cfg.c_cc[VMIN] = (UART_RX_BUFFER_SIZE - 1);
 	
 	/*´¦ÀíÎ´½ÓÊÕ×Ö·û*/
 	tcflush(fd, TCIFLUSH);

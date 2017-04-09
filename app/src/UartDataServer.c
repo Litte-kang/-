@@ -7,6 +7,7 @@
 #include "Common.h"
 #include "RGPProtocol.h"
 #include "RemoteDataServer.h"
+#include "DataQueue.h"
 
 static void 	DisposePost(int portNo, RGPPInfo rgpInfo);
 
@@ -77,50 +78,14 @@ static void DisposePost(int portNo, RGPPInfo rgpInfo)
 	tpack.m_TermialSize = 1;
 	tpack.m_TermialNo[0] = rgpInfo.m_Addr;
 	tpack.m_DataType = rgpInfo.m_DataType;
+
 	l_debug(NULL, "%s:%d",__FUNCTION__,tpack.m_DataType );
+
 	tpack.m_DataLen = rgpInfo.m_Content.m_DataInfo.m_Len;
 	for (i = 0; i < tpack.m_DataLen; ++i)
 	{
-		tpack.m_Data[i] = rgpInfo.m_Content.m_DataInfo.m_PData[i];
+		tpack.m_Data[i] = rgpInfo.m_Content.m_DataInfo.m_Data[i];
 	}
 
-	Rds_JsonString(tpack, tbuff);
-
-	//set socket use status
-	g_SocketUseStatus |= (SOCKET_INIT_STATUS << (portNo - 1));
-
-	//connect server
-	if (INVALID_SOCKET == g_SocketParam.m_Fd)
-	{
-		if (EBUSY != pthread_mutex_trylock(&g_CounterMutex))
-		{
-			g_SocketParam.m_Fd = Socket_ConnectServer(1, g_SocketParam);
-
-			pthread_mutex_unlock(&g_CounterMutex);
-		}
-		else
-		{
-			TIME start_time = {0};
-
-			GET_SYS_CURRENT_TIME(start_time);
-
-			while (INVALID_SOCKET == g_SocketParam.m_Fd)
-			{
-				if (IS_TIMEOUT(start_time, 1000))
-				{
-					break;
-				}
-
-				DelayMS(10);
-			}
-		}
-	}
-
-	if (INVALID_SOCKET != g_SocketParam.m_Fd)
-	{
-		Socket_SendData(g_SocketParam.m_Fd, tbuff, strlen(tbuff));
-	}
-
-	//clear socket use status
-	g_SocketUseStatus &= ~(SOCKET_INIT_STATUS << (portNo - 1));
+	DQ_InsertData((Data)tpack, UDS_TYPE);
 }

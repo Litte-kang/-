@@ -205,7 +205,10 @@ static int GetParse(uchar *pData, RGPPInfo *pInfo)
 		pInfo->m_Addr = (ushort)pData[3];
 		pInfo->m_Addr |= (ushort)(pData[4] << 8);
 		pInfo->m_Content.m_DataInfo.m_Len = 4;
-		pInfo->m_Content.m_DataInfo.m_PData = &pData[5];
+		pInfo->m_Content.m_DataInfo.m_Data[0] = pData[5];
+		pInfo->m_Content.m_DataInfo.m_Data[1] = pData[6];
+		pInfo->m_Content.m_DataInfo.m_Data[2] = pData[7];
+		pInfo->m_Content.m_DataInfo.m_Data[3] = pData[8];
 
 		return 0;
 	} 
@@ -236,7 +239,8 @@ static int PostParse(uchar *pData, RGPPInfo *pInfo)
 		pInfo->m_Addr = (ushort)pData[3];
 		pInfo->m_Addr |= (ushort)(pData[4] << 8);
 		pInfo->m_Content.m_DataInfo.m_Len = len;
-		pInfo->m_Content.m_DataInfo.m_PData = &pData[7];
+
+		memcpy(pInfo->m_Content.m_DataInfo.m_Data, &pData[7], len);
 		
 		return 0;
 	} 

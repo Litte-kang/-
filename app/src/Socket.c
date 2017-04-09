@@ -98,7 +98,7 @@ int Socket_ConnectServer(int times, SocketParam param)
 
 	if (0 >= times)
 	{		
-		l_debug(ERR_LOG_PATH, "%s:param error\n", __FUNCTION__);
+		l_debug(NULL, "%s:param error\n", __FUNCTION__);
 		return -1;
 	}
 	
@@ -158,7 +158,7 @@ int Socket_ConnectServer(int times, SocketParam param)
 **Parameters	: fd - in.
 				: pBuff - store data recieved.
 				: len - expectations.
-				: timeout - wait time (0:unlimit time).
+				: timeout - wait time (uint is ms)(0:unlimit time).
 **Return		: 0 - ok -1 - failed .
 ***********************************************************************/
 int Socket_RecvData(int fd, uchar *pBuff, int len, int timeout)
@@ -170,13 +170,13 @@ int Socket_RecvData(int fd, uchar *pBuff, int len, int timeout)
 
 	if (NULL == pBuff)
 	{
-		l_debug(ERR_LOG_PATH, "%s:pBuff is null!\n",__FUNCTION__);
+		l_debug(NULL, "%s:pBuff is null!\n",__FUNCTION__);
 		return -1;
 	}
 
 	if (0 > fd)
 	{
-		l_debug(ERR_LOG_PATH, "%s:socket fd error!\n",__FUNCTION__);
+		l_debug(NULL, "%s:socket fd error!\n",__FUNCTION__);
 		return -3;
 	}
 	
@@ -184,15 +184,24 @@ int Socket_RecvData(int fd, uchar *pBuff, int len, int timeout)
 	FD_SET(fd, &inset);	
 	max_fd = fd + 1;
 	
-	tv.tv_sec = timeout;
-	tv.tv_usec = 0;
+	if (1000 <= timeout)
+	{
+		tv.tv_sec = timeout / 1000;
+		tv.tv_usec = (timeout % 1000) * 1000;		
+	}
+	else
+	{
+		tv.tv_sec = 0;
+		tv.tv_usec = timeout * 1000;
+	}
+
 	
 	//--- wait data from server ---//
 	select(max_fd,  &inset, NULL, NULL, (timeout ? &tv : NULL));	
 
 	if (!FD_ISSET(fd, &inset))
 	{
-		l_debug(ERR_LOG_PATH, "%s:recv error!\n",__FUNCTION__);
+		l_debug(NULL, "%s:recv error!\n",__FUNCTION__);
 		return -1;
 	}
 
@@ -203,12 +212,12 @@ int Socket_RecvData(int fd, uchar *pBuff, int len, int timeout)
 	rec_len = recv(fd, pBuff, len, 0);	
 	if (-1 == rec_len)
 	{
-		l_debug(ERR_LOG_PATH, "%s:recieve data from server failed!\n",__FUNCTION__);
+		l_debug(NULL, "%s:recieve data from server failed!\n",__FUNCTION__);
 		return -1;
 	}
 	else if (0 == rec_len)
 	{
-		l_debug(ERR_LOG_PATH, "%s:connection break!\n",__FUNCTION__);
+		l_debug(NULL, "%s:connection break!\n",__FUNCTION__);
 		return -1;
 	}	
 
@@ -229,7 +238,7 @@ int Socket_SendData(int fd, const uchar *pBuff, int len)
 
 	if (NULL == pBuff)
 	{
-		l_debug(ERR_LOG_PATH, "%s:pBuff is null!\n",__FUNCTION__);
+		l_debug(NULL, "%s:pBuff is null!\n",__FUNCTION__);
 		return -1;
 	}
 
@@ -239,13 +248,13 @@ int Socket_SendData(int fd, const uchar *pBuff, int len)
 		
 		if (-1 == send_len || send_len != len)
 		{
-			l_debug(ERR_LOG_PATH, "%s:send data to server failed!\n",__FUNCTION__);
+			l_debug(NULL, "%s:send data to server failed!\n",__FUNCTION__);
 			return -1;
 		}		
 	}
 	else
 	{
-		l_debug(ERR_LOG_PATH, "%s:socket fd error!\n",__FUNCTION__);
+		l_debug(NULL, "%s:socket fd error!\n",__FUNCTION__);
 		return -1;
 	}
 
@@ -266,7 +275,7 @@ void  Socket_Close(SocketParam param)
 	}
 	else
 	{
-		l_debug(ERR_LOG_PATH, "%s:logout client(%d) %s:%d failed!\n", 
+		l_debug(NULL, "%s:logout client(%d) %s:%d failed!\n", 
 			__FUNCTION__, param.m_Fd, param.m_Ip, param.m_Port);	
 	}
 }

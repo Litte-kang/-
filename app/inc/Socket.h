@@ -38,7 +38,7 @@ extern int 		Socket_ConnectServer(int times, SocketParam param);
 **Parameters	: fd - in.
 				: pBuff - store data recieved.
 				: len - expectations.
-				: timeout - wait time (0:unlimit time).
+				: timeout - wait time (uint is ms)(0:unlimit time).
 **Return		: 0 - ok -1 - failed .
 ***********************************************************************/
 extern int 		Socket_RecvData(int fd, uchar *pBuff, int len, int timeout);

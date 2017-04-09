@@ -27,10 +27,10 @@
 #define		USER_COM_SIZE	HOST_COM_PORT_SIZE
 #endif
 
-#define 	BUFFER_SIZE		1024*2
-#define		TIME_DELAY		180
-#define		SEL_FILE_NUM		2
-#define		RECV_FILE_NAME		"recv.dat"
+#define 	UART_RX_BUFFER_SIZE		1024
+#define		TIME_DELAY				180
+#define		SEL_FILE_NUM			2
+#define		RECV_FILE_NAME			"recv.dat"
 
 typedef struct _UartDevInfo
 {	
