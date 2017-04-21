@@ -9,13 +9,13 @@ typedef enum _DataType
 {
 	INVALID_TYPE = -1,
 	RDS_TYPE = 0,
-	UDS_TYPE
+	UDS_TYPE = INVALID_TYPE
 }DataType;
 
 typedef union _Data
 {
 	RdsPack 	m_RdsData;
-#if 0
+#if INVALID_TYPE != UDS_TYPE
 	RGPPInfo	m_RGPData;
 #endif
 }Data;

@@ -24,7 +24,6 @@ int DQ_InsertData(Data data, DataType type)
 	switch (type)
 	{
 		case RDS_TYPE:
-			l_debug(NULL, "data type is %d", type);
 			if (g_RdsDQCurCount < 5)
 			{
 				g_RdsDataQueue[g_RdsDQWritePos] = data;
@@ -39,8 +38,8 @@ int DQ_InsertData(Data data, DataType type)
 				return 0;
 			}
 			break;
+#if 0
 		case UDS_TYPE:
-			l_debug(NULL, "data type is %d", type);
 			if (g_UdsDQCurCount < 20)
 			{
 				g_UdsDataQueue[g_UdsDQWritePos] = data;
@@ -55,6 +54,7 @@ int DQ_InsertData(Data data, DataType type)
 				return 0;
 			}
 			break;
+#endif
 	}
 
 	return -1;
@@ -72,7 +72,6 @@ Data DQ_GetData(DataType type)
 	switch (type)
 	{
 		case RDS_TYPE:
-			l_debug(NULL, "data type is %d", type);
 			if (0 < g_RdsDQCurCount)
 			{
 				d = g_RdsDataQueue[g_RdsDQReadPos];
@@ -85,8 +84,8 @@ Data DQ_GetData(DataType type)
 				}
 			}
 			break;
+#if INVALID_TYPE != UDS_TYPE
 		case UDS_TYPE:
-			l_debug(NULL, "data type is %d", type);
 			if (0 < g_UdsDQCurCount)
 			{
 				d = g_UdsDataQueue[g_UdsDQReadPos];
@@ -99,6 +98,7 @@ Data DQ_GetData(DataType type)
 				}
 			}
 			break;
+#endif
 	}
 
 	return d;

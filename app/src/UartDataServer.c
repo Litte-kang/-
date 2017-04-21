@@ -79,7 +79,7 @@ static void DisposePost(int portNo, RGPPInfo rgpInfo)
 	tpack.m_TermialNo[0] = rgpInfo.m_Addr;
 	tpack.m_DataType = rgpInfo.m_DataType;
 
-	l_debug(NULL, "%s:%d",__FUNCTION__,tpack.m_DataType );
+	//l_debug(NULL, "%s:%d",__FUNCTION__,tpack.m_DataType );
 
 	tpack.m_DataLen = rgpInfo.m_Content.m_DataInfo.m_Len;
 	for (i = 0; i < tpack.m_DataLen; ++i)
