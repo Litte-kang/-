@@ -26,10 +26,10 @@ static void TestThrd01(void *pArg)
 {
 	int thread_no = (int)pArg;
 
-	uchar rgp1[12] = {0xff,0xfe,0x01,0x01,0x00,0x02,0x00,0x01,0x02};
-	uchar rgp2[12] = {0xff,0xfe,0x02,0x01,0x00,0x02,0x00,0x03,0x04};
-	uchar rgp3[12] = {0xff,0xfe,0x03,0x01,0x00,0x02,0x00,0x05,0x06};
-	uchar rgp4[12] = {0xff,0xfe,0x04,0x01,0x00,0x02,0x00,0x07,0x08};
+	uchar rgp1[12] = {0xff,0xfe,0x1f,0x01,0x00,0x02,0x00,0x01,0x02};
+	uchar rgp2[12] = {0xff,0xfe,0x20,0x02,0x00,0x02,0x00,0x03,0x04};
+	uchar rgp3[12] = {0xff,0xfe,0x21,0x03,0x00,0x02,0x00,0x05,0x06};
+	uchar rgp4[12] = {0xff,0xfe,0x22,0x04,0x00,0x02,0x00,0x07,0x08};
 	ushort crc_code = 0;
 
 	crc_code = CheckCode(rgp1, 9);
@@ -52,28 +52,30 @@ static void TestThrd01(void *pArg)
 	rgp4[9] = (uchar)crc_code;
 	rgp4[10] = (uchar)(crc_code >> 8);
 
+	l_debug(NULL, "test thrd %d", thread_no);
+
 	while (1)
 	{	
 		switch (thread_no)
 		{
 			case 1:
-				Uds_DataDispose(1, rgp1, 11);
+				Uds_DataProcess(1, rgp1, 11);
 				DelayMS(1000);
 				break;
 			case 2:
-				Uds_DataDispose(2, rgp2, 11);
+				Uds_DataProcess(2, rgp2, 11);
 				DelayMS(800);
 				break;
 			case 3:
-				Uds_DataDispose(3, rgp3, 11);
+				Uds_DataProcess(3, rgp3, 11);
 				DelayMS(600);
 				break;
 			case 4:
-				Uds_DataDispose(4, rgp4, 11);
+				Uds_DataProcess(4, rgp4, 11);
 				DelayMS(1200);
 				break;
 		}
-		DelayMS(10);
+		DelayMS(200);
 	}
 }
 
@@ -143,7 +145,7 @@ static void AppInit()
 	{
 		InitTestThread();
 	}
-	else
+	//else
 	{
 		printf("get net config failure\n");
 	}

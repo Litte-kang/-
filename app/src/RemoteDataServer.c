@@ -12,6 +12,8 @@
 #include "DataQueue.h"
 
 static void		RdsThrd(void *pArg);
+static void 	GetRemoteUserCmd(SocketParam SocketParam, uchar *pBuff, int len, RdsPack txPack);
+static void		SendDevData(SocketParam socketParam, uchar *pBuff, int len, RdsPack txPack);
 
 /***********************************************************************
 **Function Name	: Rds_Start
@@ -240,10 +242,9 @@ int Rds_JsonString(RdsPack pack, uchar *pJsonStr)
 ***********************************************************************/
 static void	RdsThrd(void *pArg)
 {
-	RdsPack pack = {0};
-	uchar buff[RDS_BUFF_SIZE] = {0};
-	int i = 0;
+	RdsPack tx_pack = {0};
 	SocketParam socket_param = {INVALID_SOCKET, 0, 0};
+	uchar buff[RDS_BUFF_SIZE] = {0};
 
 	l_debug(RUN_LOG_PATH, "-------start remote data server thread-------\n");
 
@@ -253,6 +254,13 @@ static void	RdsThrd(void *pArg)
 		return;
 	}
 
+	memcpy(tx_pack.m_MiddleNo, "CS00000001", 10);
+	tx_pack.m_PortNo = RDS_PORT_NO_EMPTY;
+	tx_pack.m_TermialSize = 0;
+	memset(tx_pack.m_TermialNo, 0, RDS_TERMIAL_SIZE);
+	tx_pack.m_DataLen = 0;
+	memset(tx_pack.m_Data, 0, RDS_DATA_SIZE);
+
 	while (1)
 	{
 		//connect server
@@ -260,30 +268,17 @@ static void	RdsThrd(void *pArg)
 
 		if (INVALID_SOCKET != socket_param.m_Fd)
 		{
+			//get user cmd
+			GetRemoteUserCmd(socket_param, buff, RDS_BUFF_SIZE, tx_pack);
+
+			//send Device data
+			SendDevData(socket_param, buff, RDS_BUFF_SIZE, tx_pack);
+
+			//notify server close connection
+			tx_pack.m_DataType = RDS_DATA_TYPE_CLOSE_CONN;
 			memset(buff, 0, RDS_BUFF_SIZE);
-
-			if (0 == Socket_RecvData(socket_param.m_Fd, buff, RDS_BUFF_SIZE, 1000))
-			{
-				l_debug(NULL, "%s\n", buff);
-
-				memset(&pack, 0, sizeof(RdsPack));
-
-				Rds_JsonParse(&pack, buff);
-
-				DQ_InsertData((Data)pack, RDS_TYPE);
-			}
-
-			//send data
-			memset(&pack, 0, sizeof(RdsPack));
-			memset(buff, 0, RDS_BUFF_SIZE);
-			pack = DQ_GetData(UDS_TYPE).m_RdsData;
-
-			if (RDS_PORT_NO_EMPTY != pack.m_PortNo)
-			{
-				Rds_JsonString(pack, buff);
-
-				Socket_SendData(socket_param.m_Fd, buff, strlen(buff));
-			}
+			Rds_JsonString(tx_pack, buff);
+			Socket_SendData(socket_param.m_Fd, buff, strlen(buff));
 		}
 
 		if (INVALID_SOCKET != socket_param.m_Fd)
@@ -292,6 +287,68 @@ static void	RdsThrd(void *pArg)
 			socket_param.m_Fd = INVALID_SOCKET;
 		}
 
-		DelayMS(10);
+		DelayMS(200);
 	}
+}
+
+static void GetRemoteUserCmd(SocketParam SocketParam, uchar *pBuff, int len, RdsPack txPack)
+{
+	RdsPack rx_pack = {0};
+	Data dat = {0};
+
+	memset(pBuff, 0, len);
+
+	//notify server send user cmd
+	txPack.m_DataType = RDS_DATA_TYPE_GET_USER_CMD;
+	Rds_JsonString(txPack, pBuff);
+	Socket_SendData(SocketParam.m_Fd, pBuff, strlen(pBuff));
+
+	//receive user cmd within 1s
+	memset(pBuff, 0, RDS_BUFF_SIZE);
+
+	if (0 == Socket_RecvData(SocketParam.m_Fd, pBuff, RDS_BUFF_SIZE, 800))
+	{
+		l_debug(NULL, "receive:%s\n", pBuff);
+
+		memset(&rx_pack, 0, sizeof(RdsPack));
+
+		Rds_JsonParse(&rx_pack, pBuff);
+
+		dat.m_RdsData = rx_pack;
+
+		//user cmd
+		DQ_InsertData(dat, RDS_TYPE);
+	}
+}
+
+static void	SendDevData(SocketParam socketParam, uchar *pBuff, int len, RdsPack txPack)
+{
+	Data dat = {0};
+
+	memset(pBuff, 0, len);
+
+	//send data
+	dat = DQ_GetData(UDS_TYPE);
+
+	//l_debug(NULL, "send:%d\n", dat.m_UdsData.m_Data.m_DataType);
+
+#if 1
+	if (RGP_NULL != dat.m_UdsData.m_Data.m_RGPType)
+	{
+		//RGPInfo to RdsPack
+		memcpy(txPack.m_MiddleNo, "CS00000001", 10);
+		txPack.m_PortNo = (RDS_PORT_NO << (dat.m_UdsData.m_PortNo - 1));
+		txPack.m_TermialSize = 1;
+		txPack.m_TermialNo[0] = dat.m_UdsData.m_Data.m_Addr;
+		txPack.m_DataType = dat.m_UdsData.m_Data.m_DataType;
+		txPack.m_DataLen = dat.m_UdsData.m_Data.m_Content.m_DataInfo.m_Len;
+		memcpy(txPack.m_Data, 
+			dat.m_UdsData.m_Data.m_Content.m_DataInfo.m_Data, 
+			txPack.m_DataLen);
+
+		Rds_JsonString(txPack, pBuff);
+		l_debug(NULL, "send:(%d)%s\n", (RDS_PORT_NO << (dat.m_UdsData.m_PortNo - 1)), pBuff);
+		Socket_SendData(socketParam.m_Fd, pBuff, strlen(pBuff));
+	}
+#endif	
 }

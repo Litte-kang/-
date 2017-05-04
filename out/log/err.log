@@ -1,2 +1,24 @@
 2017-04-04 16:07:07 ----Uart_StartRecvThrd: 1 fd error
 2017-04-04 16:08:06 ----Uart_StartRecvThrd: 1 fd error
+2017-05-01 21:44:59 ----CatchSig:catch SIGPIPE!
+2017-05-01 21:51:17 ----CatchSig:catch SIGPIPE!
+2017-05-01 21:53:07 ----CatchSig:catch SIGPIPE!
+2017-05-01 21:55:36 ----CatchSig:catch SIGPIPE!
+2017-05-01 22:20:33 ----CatchSig:catch SIGPIPE!
+2017-05-02 22:52:44 ----CatchSig:catch SIGPIPE!
+2017-05-02 23:14:46 ----CatchSig:catch SIGPIPE!
+2017-05-02 23:15:31 ----CatchSig:catch SIGPIPE!
+2017-05-02 23:20:49 ----CatchSig:catch SIGPIPE!
+2017-05-02 23:22:05 ----CatchSig:catch SIGPIPE!
+2017-05-02 23:44:55 ----CatchSig:catch SIGPIPE!
+2017-05-02 23:50:08 ----CatchSig:catch SIGPIPE!
+2017-05-03 22:57:11 ----CatchSig:catch SIGPIPE!
+2017-05-03 22:57:11 ----CatchSig:catch SIGPIPE!
+2017-05-03 23:02:43 ----CatchSig:catch SIGPIPE!
+2017-05-03 23:02:43 ----CatchSig:catch SIGPIPE!
+2017-05-03 23:06:41 ----CatchSig:catch SIGPIPE!
+2017-05-03 23:06:41 ----CatchSig:catch SIGPIPE!
+2017-05-03 23:09:10 ----CatchSig:catch SIGPIPE!
+2017-05-03 23:09:10 ----CatchSig:catch SIGPIPE!
+2017-05-04 22:39:50 ----CatchSig:catch SIGPIPE!
+2017-05-04 22:52:00 ----CatchSig:catch SIGPIPE!

@@ -12,15 +12,17 @@
 #define RDS_TERMIAL_SIZE 	RDS_TERMIAL_SIZE_10
 
 //for RdsPack DataType
-#define RDS_DATA_TYPE_X		0
+#define RDS_DATA_TYPE_GET_USER_CMD			0
+#define RDS_DATA_TYPE_CLOSE_CONN			1
+#define RDS_DATA_TYPE_INVALID_USER_CMD		2
 
-//for RdsPack Data Buffer
+//for RdsPack Data Buffer size
 #define RDS_DATA_SIZE_128		128
 #define RDS_DATA_SIZE_256		256
 #define RDS_DATA_SIZE_512		512
 #define RDS_DATA_SIZE 			RDS_DATA_SIZE_128
 
-//for RdsPack PortNO
+//for RdsPack Port bit
 #define RDS_PORT_NO 		0x01
 #define RDS_PORT_NO_01		RDS_PORT_NO
 #define RDS_PORT_NO_02		(RDS_PORT_NO << 1)
@@ -40,8 +42,8 @@
 
 typedef struct _RdsPack
 {
-	uchar 	m_MiddleNo[11];						//middle no use 10byte,the last byte is 0
-	uchar	m_PortNo;							//a port no use 1bit
+	uchar 	m_MiddleNo[11];						//middle id use 10byte,the last byte is 0
+	uchar	m_PortNo;							//a port map 1bit(port 1 - 1th bit, port 2 - 2th bit, port 3 - 3th bit, port 4 - 4th bit)
 	uchar 	m_TermialSize;						
 	ushort 	m_TermialNo[RDS_TERMIAL_SIZE];
 	uchar 	m_DataType;						

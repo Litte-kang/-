@@ -9,17 +9,17 @@
 #include "RemoteDataServer.h"
 #include "DataQueue.h"
 
-static void 	DisposePost(int portNo, RGPPInfo rgpInfo);
+static void 	ProcessPostMethod(int portNo, RGPPInfo rgpInfo);
 
 /***********************************************************************
-**Function Name	: Uds_DataDipose
-**Description	: dispose uart data.
+**Function Name	: Uds_DataProcess
+**Description	: process uart data.
 **Parameters	: portNo - port no.
 				: pData - data.
 				: len - data len.
 **Return		: none.
 ***********************************************************************/
-void Uds_DataDispose(int portNo, uchar *pData, int len)
+void Uds_DataProcess(int portNo, uchar *pData, int len)
 {
 	RGPPInfo rgp_info = {RGP_NULL, 0, 0, 0};
 	int i = 0;
@@ -43,7 +43,7 @@ void Uds_DataDispose(int portNo, uchar *pData, int len)
 			case RGP_POST:
 				len = len - rgp_info.m_Content.m_DataInfo.m_Len - 9;
 				i = i + rgp_info.m_Content.m_DataInfo.m_Len + 9;
-				DisposePost(portNo, rgp_info);
+				ProcessPostMethod(portNo, rgp_info);
 				break;
 			case RGP_RESPONSE:
 				len = len - 8;
@@ -59,33 +59,20 @@ void Uds_DataDispose(int portNo, uchar *pData, int len)
 	
 }
 /***********************************************************************
-**Function Name	: DisposePost
+**Function Name	: ProcessPostMethod
 **Description	: dispose post method.
 **Parameters	: portNo - in
 				: rgpInfo - in.
 **Return		: none.
 ***********************************************************************/
-static void DisposePost(int portNo, RGPPInfo rgpInfo)
+static void ProcessPostMethod(int portNo, RGPPInfo rgpInfo)
 {
-	uchar tbuff[1024] = {0};
-	RdsPack tpack = {0};
-	int i = 0;
+	Data dat = {0};
 
-	memcpy(tpack.m_MiddleNo, "YZ00000001", 10);
+	dat.m_UdsData.m_PortNo = portNo;
+	dat.m_UdsData.m_Data = rgpInfo;
 
-	tpack.m_PortNo = (RDS_PORT_NO << (portNo - 1));
+	//l_debug(NULL, "%s:%d",__FUNCTION__, dat.m_UdsData.m_Data.m_DataType );
 
-	tpack.m_TermialSize = 1;
-	tpack.m_TermialNo[0] = rgpInfo.m_Addr;
-	tpack.m_DataType = rgpInfo.m_DataType;
-
-	//l_debug(NULL, "%s:%d",__FUNCTION__,tpack.m_DataType );
-
-	tpack.m_DataLen = rgpInfo.m_Content.m_DataInfo.m_Len;
-	for (i = 0; i < tpack.m_DataLen; ++i)
-	{
-		tpack.m_Data[i] = rgpInfo.m_Content.m_DataInfo.m_Data[i];
-	}
-
-	DQ_InsertData((Data)tpack, UDS_TYPE);
+	DQ_InsertData(dat, UDS_TYPE);
 }

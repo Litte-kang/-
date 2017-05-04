@@ -1,23 +1,24 @@
 #ifndef _DATA_QUEUE_H_
 #define _DATA_QUEUE_H_
 
-#include "RGPProtocol.h"
+#include "UartDataServer.h"
 #include "RemoteDataServer.h"
 #include "Type.h"
 
+#define RDS_TYPE_QUEUE_LEN		5
+#define UDS_TYPE_QUEUE_LEN		20
+
 typedef enum _DataType
 {
-	INVALID_TYPE = -1,
-	RDS_TYPE = 0,
-	UDS_TYPE = INVALID_TYPE
+	INVALID_TYPE 	= -1,
+	RDS_TYPE 		= 0,
+	UDS_TYPE 		= 1
 }DataType;
 
 typedef union _Data
 {
 	RdsPack 	m_RdsData;
-#if INVALID_TYPE != UDS_TYPE
-	RGPPInfo	m_RGPData;
-#endif
+	UdsPack		m_UdsData;
 }Data;
 
 /***********************************************************************

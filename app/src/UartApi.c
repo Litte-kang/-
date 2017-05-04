@@ -317,7 +317,7 @@ static void	RecieveUartDataThrd(void *pArg)
 						}
 #endif		
 						//do here
-						Uds_DataDispose(port_no, rx_buff, real_read);
+						Uds_DataProcess(port_no, rx_buff, real_read);
 					}
 				}
 			

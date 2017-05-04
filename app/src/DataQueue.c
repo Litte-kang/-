@@ -1,13 +1,13 @@
 #include "DataQueue.h"
 
 //-----------------uds data queue-----------------//
-static Data g_UdsDataQueue[20] = {0};
+static Data g_UdsDataQueue[UDS_TYPE_QUEUE_LEN] = {0};
 static uchar g_UdsDQWritePos = 0;
 static uchar g_UdsDQReadPos = 0;
 static uchar g_UdsDQCurCount = 0;
 
 //-----------------rds data queue-----------------//
-static Data g_RdsDataQueue[5] = {0};
+static Data g_RdsDataQueue[RDS_TYPE_QUEUE_LEN] = {0};
 static uchar g_RdsDQWritePos = 0;
 static uchar g_RdsDQReadPos = 0;
 static uchar g_RdsDQCurCount = 0;
@@ -24,13 +24,13 @@ int DQ_InsertData(Data data, DataType type)
 	switch (type)
 	{
 		case RDS_TYPE:
-			if (g_RdsDQCurCount < 5)
+			if (g_RdsDQCurCount < RDS_TYPE_QUEUE_LEN)
 			{
 				g_RdsDataQueue[g_RdsDQWritePos] = data;
 				g_RdsDQWritePos++;
 				g_RdsDQCurCount++;
 
-				if (5 <= g_RdsDQWritePos)
+				if (RDS_TYPE_QUEUE_LEN <= g_RdsDQWritePos)
 				{
 					g_RdsDQWritePos = 0;
 				}
@@ -38,15 +38,14 @@ int DQ_InsertData(Data data, DataType type)
 				return 0;
 			}
 			break;
-#if 0
 		case UDS_TYPE:
-			if (g_UdsDQCurCount < 20)
+			if (g_UdsDQCurCount < UDS_TYPE_QUEUE_LEN)
 			{
 				g_UdsDataQueue[g_UdsDQWritePos] = data;
 				g_UdsDQWritePos++;
 				g_UdsDQCurCount++;
 
-				if (20 <= g_UdsDQWritePos)
+				if (UDS_TYPE_QUEUE_LEN <= g_UdsDQWritePos)
 				{
 					g_UdsDQWritePos = 0;
 				}
@@ -54,7 +53,6 @@ int DQ_InsertData(Data data, DataType type)
 				return 0;
 			}
 			break;
-#endif
 	}
 
 	return -1;
@@ -78,13 +76,12 @@ Data DQ_GetData(DataType type)
 				g_RdsDQReadPos++;
 				g_RdsDQCurCount--;
 
-				if (5 <= g_RdsDQReadPos)
+				if (RDS_TYPE_QUEUE_LEN <= g_RdsDQReadPos)
 				{
 					g_RdsDQReadPos = 0;
 				}
 			}
 			break;
-#if INVALID_TYPE != UDS_TYPE
 		case UDS_TYPE:
 			if (0 < g_UdsDQCurCount)
 			{
@@ -92,14 +89,15 @@ Data DQ_GetData(DataType type)
 				g_UdsDQReadPos++;
 				g_UdsDQCurCount--;
 
-				if (20 <= g_UdsDQReadPos)
+				if (UDS_TYPE_QUEUE_LEN <= g_UdsDQReadPos)
 				{
 					g_UdsDQReadPos = 0;
 				}
 			}
 			break;
-#endif
 	}
+
+
 
 	return d;
 }
