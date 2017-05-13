@@ -68,11 +68,21 @@ extern int 		Uart_Open(int portNo);
 **Function Name	: Uart_SendData
 **Description	: send data to uart.
 **Parameters	: portNo - port no.
-				: pData - data.
+				: pBuff - in.
 				: len - data len.
 **Return		: 0 - ok -1 - failed.
 ***********************************************************************/
-extern int 		Uart_SendData(int portNo, const uchar *pData, int len);
+extern int 		Uart_SendData(int portNo, const uchar *pBuff, int len);
+/***********************************************************************
+**Function Name	: Uart_RecvData
+**Description	: receive data from uart.
+**Parameters	: portNo - port no.
+				: pBuff - out.
+				: len - data len.
+				: timeout - wait time (uint is ms)(0:unlimit time)
+**Return		: >0 - recv data len -1 - failed.
+***********************************************************************/
+extern int 		Uart_RecvData(int portNo, uchar *pBuff, int len, int timeout);
 /***********************************************************************
 **Function Name	: Uart_Close
 **Description	: close uart opened.
@@ -80,12 +90,5 @@ extern int 		Uart_SendData(int portNo, const uchar *pData, int len);
 **Return		: none.
 ***********************************************************************/
 extern void		Uart_Close(int portNo); 	
-/***********************************************************************
-**Function Name	: Uart_StartRecvThrd
-**Description	: create a thread to recieve uart data.
-**Parameters	: portNo - port no.
-**Return		: 0 - ok, -1 - failed.
-***********************************************************************/
-extern int	 	Uart_StartRecvThrd(int portNo);	
 
 #endif /* UART_API_H */

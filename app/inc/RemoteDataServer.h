@@ -30,20 +30,12 @@
 #define RDS_PORT_NO_04		(RDS_PORT_NO << 3)
 #define RDS_PORT_NO_EMPTY	0x00	
 
-//for socket use status
-#define SOCKET_INIT_STATUS		0x01
-#define SOCKET_USE_STATUS1		SOCKET_INIT_STATUS
-#define SOCKET_USE_STATUS2		(SOCKET_INIT_STATUS << 1)
-#define SOCKET_USE_STATUS3		(SOCKET_INIT_STATUS << 2)
-#define SOCKET_USE_STATUS4		(SOCKET_INIT_STATUS << 3)
-#define SCOKET_NULL_STATUS		0x00
-
 #define RDS_BUFF_SIZE	1024
 
 typedef struct _RdsPack
 {
 	uchar 	m_MiddleNo[11];						//middle id use 10byte,the last byte is 0
-	uchar	m_PortNo;							//a port map 1bit(port 1 - 1th bit, port 2 - 2th bit, port 3 - 3th bit, port 4 - 4th bit)
+	uchar	m_Ports;							//a port map 1bit(port 1 - 1th bit, port 2 - 2th bit, port 3 - 3th bit, port 4 - 4th bit)
 	uchar 	m_TermialSize;						
 	ushort 	m_TermialNo[RDS_TERMIAL_SIZE];
 	uchar 	m_DataType;						

@@ -97,14 +97,14 @@ int	Rds_JsonParse(RdsPack *pPack, const uchar *pJsonStr)
 	//port no
 	p_obj = json_object_object_get(p_rds_pack, "portNo");
 	array_len = json_object_array_length(p_obj);
-	pPack->m_PortNo = RDS_PORT_NO_EMPTY;
+	pPack->m_Ports = RDS_PORT_NO_EMPTY;
 
 	for (i = 0; i < array_len; ++i)
 	{
 		p_ele = json_object_array_get_idx(p_obj, i);
 
-		pPack->m_PortNo |= (RDS_PORT_NO_01 << (json_object_get_int(p_ele) - 1));
-		l_debug(NULL, "portNo:%d", pPack->m_PortNo);
+		pPack->m_Ports |= (RDS_PORT_NO_01 << (json_object_get_int(p_ele) - 1));
+		l_debug(NULL, "portNo:%d", pPack->m_Ports);
 	}
 
 	//termial no
@@ -175,24 +175,24 @@ int Rds_JsonString(RdsPack pack, uchar *pJsonStr)
 	//port no
 	p_array = json_object_new_array();
 
-	if (RDS_PORT_NO_EMPTY != pack.m_PortNo)
+	if (RDS_PORT_NO_EMPTY != pack.m_Ports)
 	{
-		if ((pack.m_PortNo & RDS_PORT_NO_01))
+		if ((pack.m_Ports & RDS_PORT_NO_01))
 		{
 			json_object_array_add(p_array, json_object_new_int(1));
 		}
 
-		if ((pack.m_PortNo & RDS_PORT_NO_02))
+		if ((pack.m_Ports & RDS_PORT_NO_02))
 		{
 			json_object_array_add(p_array, json_object_new_int(2));
 		}
 
-		if ((pack.m_PortNo & RDS_PORT_NO_03))
+		if ((pack.m_Ports & RDS_PORT_NO_03))
 		{
 			json_object_array_add(p_array, json_object_new_int(3));
 		}
 
-		if ((pack.m_PortNo & RDS_PORT_NO_04))
+		if ((pack.m_Ports & RDS_PORT_NO_04))
 		{
 			json_object_array_add(p_array, json_object_new_int(4));
 		}
@@ -255,7 +255,7 @@ static void	RdsThrd(void *pArg)
 	}
 
 	memcpy(tx_pack.m_MiddleNo, "CS00000001", 10);
-	tx_pack.m_PortNo = RDS_PORT_NO_EMPTY;
+	tx_pack.m_Ports = RDS_PORT_NO_EMPTY;
 	tx_pack.m_TermialSize = 0;
 	memset(tx_pack.m_TermialNo, 0, RDS_TERMIAL_SIZE);
 	tx_pack.m_DataLen = 0;
@@ -327,7 +327,7 @@ static void	SendDevData(SocketParam socketParam, uchar *pBuff, int len, RdsPack 
 
 	memset(pBuff, 0, len);
 
-	//send data
+	//get data
 	dat = DQ_GetData(UDS_TYPE);
 
 	//l_debug(NULL, "send:%d\n", dat.m_UdsData.m_Data.m_DataType);
@@ -337,7 +337,7 @@ static void	SendDevData(SocketParam socketParam, uchar *pBuff, int len, RdsPack 
 	{
 		//RGPInfo to RdsPack
 		memcpy(txPack.m_MiddleNo, "CS00000001", 10);
-		txPack.m_PortNo = (RDS_PORT_NO << (dat.m_UdsData.m_PortNo - 1));
+		txPack.m_Ports = (RDS_PORT_NO << (dat.m_UdsData.m_PortNo - 1));
 		txPack.m_TermialSize = 1;
 		txPack.m_TermialNo[0] = dat.m_UdsData.m_Data.m_Addr;
 		txPack.m_DataType = dat.m_UdsData.m_Data.m_DataType;
@@ -348,6 +348,8 @@ static void	SendDevData(SocketParam socketParam, uchar *pBuff, int len, RdsPack 
 
 		Rds_JsonString(txPack, pBuff);
 		l_debug(NULL, "send:(%d)%s\n", (RDS_PORT_NO << (dat.m_UdsData.m_PortNo - 1)), pBuff);
+		
+		//send data
 		Socket_SendData(socketParam.m_Fd, pBuff, strlen(pBuff));
 	}
 #endif	

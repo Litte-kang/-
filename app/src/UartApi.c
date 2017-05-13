@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <fcntl.h>
 #include <termios.h>
 #include <errno.h>
@@ -179,74 +180,18 @@ void Uart_Close(int portNo)
 }
 
 /***********************************************************************
-**Function Name	: Uart_StartRecvThrd
-**Description	: create a thread to recieve uart data.
-**Parameters	: portNo - port no.
-**Return		: 0 - ok, -1 - failed.
-***********************************************************************/
-int Uart_StartRecvThrd(int portNo)
-{
-	pthread_t thread = {0};
-	pthread_attr_t thread_attr = {0};
-	void *thrd_ret 	= NULL;
-	int res 		= 0;
-
-	do
-	{
-		if (g_UartDevInfo[portNo - 1].m_Fd < 0)
-		{
-			l_debug(ERR_LOG_PATH, "%s: %d fd error\n", __FUNCTION__, portNo);
-			break;
-		}
-
-		res = pthread_attr_init(&thread_attr);
-		if (0 != res)
-		{
-			l_debug(ERR_LOG_PATH, "%s: thread attr init failed!\n", __FUNCTION__);
-			return -1;
-		}
-
-		res = pthread_attr_setscope(&thread_attr, PTHREAD_SCOPE_SYSTEM);
-		if (0 != res)
-		{
-			l_debug(ERR_LOG_PATH, "%s:set scope failed!\n", __FUNCTION__);
-			return -1;		
-		}
-
-		res = pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
-		if (0 != res)
-		{
-			l_debug(ERR_LOG_PATH, "%s:set detach state failed\n", __FUNCTION__);
-			return -1;
-		}
-
-		res = pthread_create(&thread, &thread_attr, (void*)RecieveUartDataThrd, (void*)portNo);
-		if (0 != res)
-		{
-			l_debug(ERR_LOG_PATH, "%s:create thread task failed!\n", __FUNCTION__);
-			return -1;
-		}
-
-		pthread_attr_destroy(&thread_attr);
-	
-	}while(0);
-
-	return 0;
-
-}
-/***********************************************************************
 **Function Name	: Uart_SendData
 **Description	: send data to uart.
 **Parameters	: portNo - port no.
-				: pData - data.
+				: pBuff - in.
 				: len - data len.
 **Return		: 0 - ok -1 - failed.
 ***********************************************************************/
-int Uart_SendData(int portNo, const uchar *pData, int len)
+int Uart_SendData(int portNo, const uchar *pBuff, int len)
 {
 	int write_real = 0;
 
-	write_real = write(g_UartDevInfo[portNo - 1].m_Fd, pData, len);
+	write_real = write(g_UartDevInfo[portNo - 1].m_Fd, pBuff, len);
 
 	if (len == write_real)
 	{	
@@ -256,77 +201,65 @@ int Uart_SendData(int portNo, const uchar *pData, int len)
 	return -1;
 }
 /***********************************************************************
-**Function Name	: RecieveUartDataThrd
-**Description	: this is a thread to recieve uart data.
-**Parameters	: pArg - in.
-**Return		: none.
+**Function Name	: Uart_RecvData
+**Description	: receive data from uart.
+**Parameters	: portNo - port no.
+				: pBuff - out.
+				: len - data len.
+				: timeout - wait time (uint is ms)(0:unlimit time)
+**Return		: >0 - recv data len -1 - failed.
 ***********************************************************************/
-static void	RecieveUartDataThrd(void *pArg)
+int Uart_RecvData(int portNo, uchar *pBuff, int len, int timeout)
 {
-	uchar rx_buff[UART_RX_BUFFER_SIZE] = {0};
 	int real_read = 0;
 	int fd = 0;
 	int max_fd = 0;
-	int res = 0;
-	int port_no = (int)(pArg);
 	fd_set set;
-	fd_set tmp_set;
+	struct timeval tv;
 
-	l_debug(RUN_LOG_PATH, "-------start %d uart recieve thread-------\n", port_no);
-
-	fd = g_UartDevInfo[port_no - 1].m_Fd;
+	fd = g_UartDevInfo[portNo - 1].m_Fd;
 	max_fd = fd;
 
 	FD_ZERO(&set);
 	FD_SET(fd, &set);
 
-	while (FD_ISSET(fd, &set))
+	if (1000 <= timeout)
 	{
-		tmp_set = set;
-		//block mode
-		res = select(max_fd + 1, &tmp_set, NULL, NULL, NULL);
-
-		switch(res)
-		{
-			case -1:
-				l_debug(ERR_LOG_PATH, "%s:%d uart select error", __FUNCTION__, port_no);
-				break;
-			case 0:
-				l_debug(ERR_LOG_PATH, "%s:%d uart select tiemout error", __FUNCTION__, port_no);
-				break;
-			default:
-				
-				if (FD_ISSET(fd, &tmp_set))
-				{
-					//clear rx_buff;
-					memset(rx_buff, 0, UART_RX_BUFFER_SIZE);
-
-					real_read = read(fd, rx_buff, UART_RX_BUFFER_SIZE);
-
-					if (0 < real_read)
-					{
-#if 1
-						{
-						    int j = 0;
-						    l_debug(NULL, "----------------------------------uart %d(%d) data\n", port_no, fd);
-						    for (; j < real_read; ++j)
-						    {
-						        L_DEBUG("0x%.2x,",rx_buff[j]);
-						    }
-						    L_DEBUG("\n");
-						}
-#endif		
-						//do here
-						Uds_DataProcess(port_no, rx_buff, real_read);
-					}
-				}
-			
-				break;
-		}
+		tv.tv_sec = timeout / 1000;
+		tv.tv_usec = (timeout % 1000) * 1000;		
+	}
+	else
+	{
+		tv.tv_sec = 0;
+		tv.tv_usec = timeout * 1000;
 	}
 
-	l_debug(ERR_LOG_PATH, "%s:%d uart error", __FUNCTION__,  port_no);
+	select(max_fd + 1, &set, NULL, NULL, (0 != timeout ? &tv : NULL));
+			
+	if (FD_ISSET(fd, &set))
+	{
+		//clear pBuff;
+		memset(pBuff, 0, UART_RX_BUFFER_SIZE);
+
+		real_read = read(fd, pBuff, UART_RX_BUFFER_SIZE);
+
+		if (0 >= real_read)
+		{
+			return -1;
+		}
+	}
+	else
+	{
+		l_debug(NULL, "%s:recv error!\n",__FUNCTION__);
+
+		return -1;
+	}
+
+	FD_CLR(fd, &set);
+
+	return real_read;
 }
+
 /***********************************************************************
 **Function Name	: SetUart
 **Description	: set uart paramter.
